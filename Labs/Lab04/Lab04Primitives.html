@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<HTML>
+
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Lab 04 Primitives</title>
+
+</HEAD>
+
+<BODY>
+
+  <h4>Answers to questions</h4>
+<p>
+  <ul>
+    <li>Points: I expect all nine points to show</li>
+    <li>Lines: I expect there to be 4 lines and one point that is not a vertex for a line</li>
+    <li>Line Strip: I expect all lines to be connected but it does not close at the first and last vertices</li>
+    <li>Line Loop: I expect all the lines to be connected and the first and last vertices to also be connected</li>
+    <li>Triangles: I expect there to be three triangles since there are 9 points</li>
+    <li>Triangle Strip: I expect there to be more triangles, but it will be rather messy due to the way the points are laid out</li>
+    <li>Triangle Fan: Based on the points, it will work but the second section from the left of the fan will be "clipped"</li>
+  </ul>
+</p>
+
+<canvas id="gl-canvas" width="512" height="512" style="border: 1px solid #000000;" >
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+#version 300 es
+in vec4 aPosition;
+void
+main()
+{
+  gl_PointSize = 20.0;
+  gl_Position = aPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+#version 300 es
+precision mediump float;
+out vec4 fColor;
+void
+main()
+{
+  fColor = vec4(1.0,0.0,0.0,1.0);
+}
+</script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MVnew.js"></script>
+<script type="text/javascript" src="Lab04Primitives.js"></script>
+
+</BODY>
+</HTML>
