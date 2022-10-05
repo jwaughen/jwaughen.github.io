@@ -1,0 +1,50 @@
+<!--
+    Jenna Waughen
+    Hw 03
+    10/5/2022
+    Code taken from Lab 07
+-->
+<!DOCTYPE html>
+<html>
+
+<title>HW 03</title>
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512" style="border: 1px solid black"> </canvas>
+<button type="button" id="toggle">Toggle Morph On/Off</button>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+    #version 300 es
+    in vec4 jPosition;
+    in vec4 cPosition;
+    uniform float t;
+    
+    void main()
+    {
+      gl_Position.x = t*jPosition.x + (1.0-t)*cPosition.x;
+      gl_Position.y = t*jPosition.y + (1.0-t)*cPosition.y;
+      gl_Position.z = 0.0;
+      gl_Position.w = 1.0;
+    }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+#version 300 es
+
+precision mediump float;
+uniform vec4 aColor;
+out vec4 fColor;
+
+void main()
+{
+    fColor = aColor;
+}
+</script>
+
+<script src="../../Common/initShaders.js"></script>
+<script src="../../Common/MVnew.js"></script>
+<script src="HW03.js"></script>
+
+</body>
+</html>
