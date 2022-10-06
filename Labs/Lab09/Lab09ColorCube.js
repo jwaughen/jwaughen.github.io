@@ -10,7 +10,7 @@ var zAxis = 2;
 var theta = [0, 0, 0];
 var thetaLoc;
 var flag = true;
-var numElements = 20; //as you get decrement the numElements less of the cube appears
+var numElements = 20; //as you get decrement the numElements less of the cube appears. Originally 29
 
     var vertices = [
         vec3(-0.5, -0.5,  0.5), //v_0
