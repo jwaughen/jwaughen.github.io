@@ -1,0 +1,119 @@
+/*Color Hexcodes
+Yellow- #F9C80E
+Orange- #F86624
+Pink- #EA3546
+Purple- #662E9B
+Blue- #43BCCD
+*/
+
+* {
+    font-family:'Times New Roman', Times, serif;
+}
+
+/*Logo*/
+.logo {
+    margin: auto;
+    width: 125px;
+    padding-top: 37px;   
+}
+
+.logo img{
+    width:125px;
+    height:125px;
+}
+
+/*Header*/
+header {
+    width: auto;
+    height: 200px;
+    background: linear-gradient(to bottom, #EA3546, #F86624, #F9C80E, #43BCCD);
+}
+
+/*Footer*/
+footer {
+    background: #662E9B;
+    width: auto;
+    max-height:fit-content;
+}
+
+footer p {
+    color: white;
+}
+
+/*Navigation Bar*/
+nav {
+    background: #662E9B;
+}
+
+.nav-item {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/*Grid Containers*/
+.grid-container {
+    background-color: wheat;
+    padding:1%;
+}
+
+/*Grid Items*/
+.grid-item {
+    border-radius: 25%;
+    padding:10%;
+}
+
+/*Home Page Grid*/
+#business-hours {
+    grid-area: hours; 
+    background-color: #EA3546;
+}
+#introduction {
+    grid-area: intro;
+    background-color: #43BCCD;
+    text-align: center;
+}
+#image-rotator {
+    grid-area: images;
+    background-color: #F86624;
+}
+#ads {
+    grid-area: ads;
+    background-color: #F9C80E;
+}
+
+ #home-grid {
+    display: grid;
+    grid-template-areas:
+      'hours intro intro ads'
+      'hours images images ads'
+      'hours images images ads';
+      gap:1%;
+}
+
+/*Contact Page Grid*/
+#about-me {
+    grid-area:aboutme;
+    background-color: #F86624;
+}
+
+#contact-me {
+    grid-area:contactme;
+    background-color: #43BCCD;
+}
+
+#contact-me form {
+    padding-left: 26%;
+}
+
+#contact-grid {
+    padding-left: 20%;
+    padding-right: 20%;
+    display: grid;
+    grid-template-areas: 
+        'aboutme'
+        'contactme';
+    gap:1%;
+}
+
+
+  
