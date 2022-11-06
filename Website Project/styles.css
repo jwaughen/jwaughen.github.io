@@ -75,6 +75,11 @@ nav {
 #image-rotator {
     grid-area: images;
     background-color: #F86624;
+    
+}
+#image-rotator img {
+    width: 70%;
+    margin: auto;
 }
 #ads {
     grid-area: ads;
@@ -84,9 +89,9 @@ nav {
  #home-grid {
     display: grid;
     grid-template-areas:
-      'hours intro intro ads'
-      'hours images images ads'
-      'hours images images ads';
+      'hours intro intro'
+      'hours images images'
+      'ads images images';
       gap:1%;
 }
 
