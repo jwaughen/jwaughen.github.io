@@ -1,0 +1,33 @@
+#recipes-introduction {
+    background-color: #F9C80E;
+    text-align: center;
+}
+
+button {
+    border: #EA3546;
+    background-color: #EA3546;
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 10px !important;
+    margin:10px !important;
+}
+
+.recipe-cell>img {
+    width: 200px;
+    height: 200px;
+}
+
+.recipe-cell>p {
+    padding-top: 15px;
+    text-align: center;
+}
+
+.recipe-grid {
+    padding:10px;
+    text-align: center;
+}
+
+.modal-body {
+    text-align: left !important; 
+}

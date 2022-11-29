@@ -1,0 +1,32 @@
+/*Home Page Grid*/
+#business-hours {
+    grid-area: hours; 
+    background-color: #EA3546;
+}
+#introduction {
+    grid-area: intro;
+    background-color: #43BCCD;
+    text-align: center;
+}
+#image-rotator {
+    grid-area: images;
+    background-color: #F86624;
+    
+}
+#image-rotator img {
+    width: 70%;
+    margin: auto;
+}
+#ads {
+    grid-area: ads;
+    background-color: #F9C80E;
+}
+
+ #home-grid {
+    display: grid;
+    grid-template-areas:
+      'hours intro intro'
+      'hours images images'
+      'ads images images';
+      gap:1%;
+}
