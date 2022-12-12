@@ -1,174 +1,145 @@
-// shadow map example
-
-// two objects: a rotatable cube and triangle
-// point light source behind triangle
-
 "use strict";
 
 var canvas;
 var gl;
 
-window.onload = init;
-
-var numPlaneVertices  = 6;
-var numTriangleVertices = 3;
-
-var triangleInstanceMatrix, cubeInstanceMatrix;
-var projectionMatrix;
-var cameraViewMatrix;
-var lightProjectionMatrix;
-var lightViewMatrix;
-
-var vPosition;
+var numPositions  = 42;
+var program;
+var positions = [];
+var colors = [];
 
 var vBuffer, cBuffer;
 var framebuffer, renderbuffer;
 var texture1;
 var buffer1, buffer2, buffer3;
 
-var program1, program2;
+var projectionMatrix;
+var lightProjectionMatrix;
+var lightViewMatrix;
 
-var positionsArray = [];
-var colorsArray = [];
-
-// object vertex and color data
+var backgroundVertices = [
+    vec4(-0.9, -0.9,  0.0, 1.0),
+    vec4(-0.9,  0.9,  0.0, 1.0),
+    vec4(0.9,  0.9,  0.0, 1.0),
+    vec4(0.9, -0.9,  0.0, 1.0)
+];
 
 var cubeVertices = [
-    vec4(-0.5, -0.5, 0.5, 1.2),
-    vec4(0.5, -0.5, 0.5, 1.2),
-    vec4(-0.5, -0.5, -0.5, 1.2),
-    vec4(0.5, -0.5, -0.5, 1.2)
+    //box 1
+    vec4(-0.4,0.-0.4,0.2,1.0),
+    vec4(-0.4,-0.4,0.8,1.0),
+    vec4(-0.2,-0.4,0.8,1.0),
+    vec4(-0.2,-0.4,0.2,1.0),
+    vec4(-0.4,0.-0.2,0.2,1.0),
+    vec4(-0.4,-0.2,0.8,1.0),
+    vec4(-0.2,-0.2,0.8,1.0),
+    vec4(-0.2,-0.2,0.2,1.0)
+
 ];
 
-var cubeColors = [
-    vec4(1.0, 0.0, 0.0, 1.0),  // red
+var backgroundColor = [
     vec4(1.0, 1.0, 0.0, 1.0),  // yellow
-    vec4(0.0, 1.0, 0.0, 1.0),  // green
-    vec4(0.0, 0.0, 1.0, 1.0),  // blue
-    vec4(1.0, 0.0, 1.0, 1.0),  // magenta
-    vec4(0.0, 1.0, 1.0, 1.0)   // cyan
+    vec4(1.0,0.0,0.0,1.0)   // red
 ];
-
-var triangleVertices = [
-    vec4(0.25, 1.0, 1.0, 1.0),
-    vec4(0.50, 0.5, 1.0, 1.0),
-    vec4(0.00, 0.5, 1.0, 1.0)
-];
-
-var triangleColor = vec4(0.5, 0.5, 0.0, 1.0);
-
-// functions to generate buffer data for objects
 
 init();
 
-function quad(a, b, c, d) {
-     positionsArray.push(cubeVertices[a]);
-     colorsArray.push(cubeColors[a]);
-     positionsArray.push(cubeVertices[b]);
-     colorsArray.push(cubeColors[a]);
-     positionsArray.push(cubeVertices[c]);
-     colorsArray.push(cubeColors[a]);
-     positionsArray.push(cubeVertices[a]);
-     colorsArray.push(cubeColors[a]);
-     positionsArray.push(cubeVertices[c]);
-     colorsArray.push(cubeColors[a]);
-     positionsArray.push(cubeVertices[d]);
-     colorsArray.push(cubeColors[a]);
-}
-
-function colorPlane()
+function init()
 {
-    quad(1, 0, 2, 3);
-}
-
-function triangle(a, b, c) {
-
-     positionsArray.push(triangleVertices[a]);
-     colorsArray.push(triangleColor);
-     positionsArray.push(triangleVertices[b]);
-     colorsArray.push(triangleColor);
-     positionsArray.push(triangleVertices[c]);
-     colorsArray.push(triangleColor);
-}
-
-function init() {
-
     canvas = document.getElementById("gl-canvas");
 
     gl = canvas.getContext('webgl2');
     if (!gl) alert("WebGL 2.0 isn't available");
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.5, 0.5, 0.5, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
-// Create an empty texture
-
-    texture1 = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-
-// generate cube and triangle data
-
     colorPlane();
-    triangle(0, 1, 2);
+    colorBoxes();
 
-//  Load shaders and initialize attribute buffers
+    //
+    //  Load shaders and initialize attribute buffers
+    //
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
 
-    program1 = initShaders(gl, "vertex-shader-1", "fragment-shader-1");
-    program2 = initShaders(gl, "vertex-shader-2", "fragment-shader-2");
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+
+    var colorLoc = gl.getAttribLocation( program, "aColor" );
+    gl.vertexAttribPointer( colorLoc, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( colorLoc );
+
+    var vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 
 
-    vBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(positionsArray), gl.STATIC_DRAW);
-
-    var positionLoc = gl.getAttribLocation(program1, "aPosition");
+    var positionLoc = gl.getAttribLocation(program, "aPosition");
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
-
-    buffer1 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer1);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(positionsArray), gl.STATIC_DRAW);
-
-    var shaderPositionLoc = gl.getAttribLocation(program2, "aPosition");
-    gl.vertexAttribPointer(shaderPositionLoc, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(shaderPositionLoc);
-
-    var buffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
-
-    var shaderColorLoc = gl.getAttribLocation( program2, "aColor");
-    gl.vertexAttribPointer(shaderColorLoc, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(shaderColorLoc);
 
     render();
 }
 
-function render() {
+function colorPlane()
+{
+    quad(1, 0, 3, 2); 
+}
 
-// First render the objects from the light's persepctive
-// Render into texture so we can save the distances from camera
+function quad(a, b, c, d)
+{
+    positions.push(backgroundVertices[a]);
+    colors.push(backgroundColor[0]);
+    positions.push(backgroundVertices[b]);
+    colors.push(backgroundColor[0]);
+    positions.push(backgroundVertices[c]);
+    colors.push(backgroundColor[0]);
+    positions.push(backgroundVertices[a]);
+    colors.push(backgroundColor[0]);
+    positions.push(backgroundVertices[c]);
+    colors.push(backgroundColor[0]);
+    positions.push(backgroundVertices[d]);
+    colors.push(backgroundColor[0]);
+}
 
-// Allocate a frame buffer object
+function colorBoxes() {
+    quad1(1, 0, 3, 2);
+    quad1(2, 3, 7, 6);
+    quad1(3, 0, 4, 7);
+    quad1(6, 5, 1, 2);
+    quad1(4, 5, 6, 7);
+    quad1(5, 4, 0, 1);
+}
 
+function quad1(a, b, c, d) {
+    positions.push(cubeVertices[a]);
+    colors.push(backgroundColor[1]);
+    positions.push(cubeVertices[b]);
+    colors.push(backgroundColor[1]);
+    positions.push(cubeVertices[c]);
+    colors.push(backgroundColor[1]);
+    positions.push(cubeVertices[a]);
+    colors.push(backgroundColor[1]);
+    positions.push(cubeVertices[c]);
+    colors.push(backgroundColor[1]);
+    positions.push(cubeVertices[d]);
+    colors.push(backgroundColor[1]);
+}
+
+function render()
+{
     framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    framebuffer.width = 512;
-    framebuffer.height = 512;
+    framebuffer.width = 1024;
+    framebuffer.height = 1024;
 
     renderbuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 1024, 1024);
 
     // Attach color buffer
 
@@ -180,10 +151,7 @@ function render() {
     var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if(status != gl.FRAMEBUFFER_COMPLETE) alert('Frame Buffer Not Complete');
 
-
-    gl.useProgram(program1);
-
-// light projection and modelview matrices
+    gl.useProgram(program);
 
     var fovy = 45.0;
     var near = 3.0;
@@ -192,93 +160,33 @@ function render() {
 
    lightProjectionMatrix = perspective(fovy, aspect, near, far);
 
-    var lightPosition = vec3(1.0, 3.0, 3.9);
+    var lightPosition = vec3(0.0, 0.0, 3.2);
 
     var at = vec3(0.0, 0.0, 0.0);
     var up = vec3(0.0, 1.0, 0.0);
 
     lightViewMatrix = lookAt(lightPosition, at, up);
 
-    gl.uniformMatrix4fv(gl.getUniformLocation(program1,
+    gl.uniformMatrix4fv(gl.getUniformLocation(program,
             "uProjectionMatrix"), false, flatten(lightProjectionMatrix));
 
-    gl.uniformMatrix4fv(gl.getUniformLocation(program1,
+    gl.uniformMatrix4fv(gl.getUniformLocation(program,
             "uModelViewMatrix"), false, flatten(lightViewMatrix));
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
-// update cube rotation matrix (its instance transformation) then render ccube
+    var triangleInstanceMatrix = mat4();
 
-
-    
-
-    cubeInstanceMatrix = mat4();
-    gl.uniformMatrix4fv( gl.getUniformLocation(program1,
-            "uInstanceMatrix"), false, flatten(cubeInstanceMatrix) );
-
-    gl.drawArrays(gl.TRIANGLES, 0, numPlaneVertices);
-
-// don't rotate traingle and render it
-
-    triangleInstanceMatrix = mat4();
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program1,
-            "uInstanceMatrix"), false, flatten(triangleInstanceMatrix));
-
-    gl.drawArrays(gl.TRIANGLES, numPlaneVertices, numTriangleVertices);
-
-// release buffers
+    gl.uniformMatrix4fv(gl.getUniformLocation(program,
+                    "uInstanceMatrix"), false, flatten(triangleInstanceMatrix));
+        
+    gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-//  second render from camera view pointsArray
-// need matrices for both views so we can compare distances
-
-    gl.useProgram(program2);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture1);
-    gl.uniform1i(gl.getUniformLocation(program2, "texture"), 0);
-
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.viewport(0, 0, 512, 512);
-
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uLightProjectionMatrix"), false, flatten(lightProjectionMatrix));
-
-     gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uLightViewMatrix"), false, flatten(lightViewMatrix));
-
-// modelView and projection matrices for camera viewpor
-
-    projectionMatrix = ortho(-1, 1, -1, 1, -5, 5);
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uProjectionMatrix"), false, flatten(projectionMatrix));
-
-    cameraViewMatrix = mat4();
-
-     var cameraLoc = vec3(0, 1, 1);
-     var cameraAt = vec3(0, 0, 0);
-     var cameraUp = vec3(0, 1, 0);
-
-    cameraViewMatrix = lookAt(cameraLoc, cameraAt, cameraUp);
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uModelViewMatrix"), false, flatten(cameraViewMatrix));
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uInstanceMatrix"), false, flatten(cubeInstanceMatrix));
-    gl.drawArrays( gl.TRIANGLES, 0, numPlaneVertices);
-
-
-    gl.uniformMatrix4fv(gl.getUniformLocation(program2,
-            "uInstanceMatrix"), false, flatten(triangleInstanceMatrix));
-    gl.drawArrays(gl.TRIANGLES, numPlaneVertices, numTriangleVertices);
-
+    gl.drawArrays(gl.TRIANGLES, 0, numPositions);
     setInterval( requestAnimationFrame(render) , 500) ;
-
 }
